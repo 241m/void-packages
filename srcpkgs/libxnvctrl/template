@@ -1,0 +1,51 @@
+# Template file for 'libxnvctrl'
+pkgname=libxnvctrl
+version=515.65.01
+revision=1
+wrksrc="nvidia-settings-${version}"
+build_wrksrc=src/libXNVCtrl
+build_style=gnu-makefile
+makedepends="libXext-devel"
+short_desc="NVIDIA NV-CONTROL X extension"
+maintainer="Zaim Bakar <github.241m.wsbrb@slmail.me>"
+license="GPL-2.0-or-later"
+homepage="https://github.com/NVIDIA/nvidia-settings"
+distfiles="https://github.com/NVIDIA/nvidia-settings/archive/${version}.tar.gz"
+checksum=5970f773decd707fa7c049e62dd104bba427b34580d94fb729dd7ae3bad71bda
+patch_args=-Np0
+
+_udoc=usr/share/doc/${pkgname}
+_uinc=usr/include/NVCtrl
+_ulib=usr/lib
+
+pre_build() {
+	export OUTPUTDIR=out
+	export CFLAGS+=" -ffat-lto-objects"
+}
+
+do_install() {
+	local _lib="${PKGDESTDIR:?}/$_ulib"
+	local _doc="${PKGDESTDIR:?}/$_udoc"
+	local _inc="${PKGDESTDIR:?}/$_uinc"
+
+	mkdir -p "$_doc/samples"
+	cp "$wrksrc"/doc/{FRAMELOCK.txt,NV-CONTROL-API.txt} -t "$_doc"
+	cp "$wrksrc"/samples/* -t "$_doc/samples"
+
+	mkdir -p "$_inc"
+	cp -- *.h "$_inc"
+
+	mkdir -p "$_lib"
+	cp -Pr "$wrksrc/$build_wrksrc"/out/libXNVCtrl.* -t "$_lib"
+}
+
+libxnvctrl-devel_package() {
+	depends="${sourcepkg:?}>=${version}_${revision}"
+	short_desc+=" - development files"
+
+	pkg_install() {
+		vmove "$_uinc"
+		vmove "$_ulib/*.so"
+		vmove "$_ulib/*.a"
+	}
+}
